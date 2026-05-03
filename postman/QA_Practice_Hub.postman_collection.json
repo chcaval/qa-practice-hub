@@ -1,0 +1,399 @@
+{
+  "info": {
+    "name": "QA Practice Hub",
+    "description": "Full API test suite for the QA Practice Hub backend. Covers health check, user CRUD, and AI summarize endpoint. Run in order — Create User sets the user_id variable used by subsequent requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "user_id",
+      "value": "",
+      "description": "Set automatically after Create User runs"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('body has status ok', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Example\",\n  \"email\": \"alice@example.com\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 201', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('response has expected fields', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.all.keys('id', 'name', 'email', 'is_active');",
+                  "});",
+                  "",
+                  "pm.test('name and email match request', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.name).to.eql('Alice Example');",
+                  "  pm.expect(json.email).to.eql('alice@example.com');",
+                  "});",
+                  "",
+                  "pm.test('user is active by default', () => {",
+                  "  pm.expect(pm.response.json().is_active).to.be.true;",
+                  "});",
+                  "",
+                  "// Save user_id for subsequent requests",
+                  "const id = pm.response.json().id;",
+                  "pm.collectionVariables.set('user_id', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User — duplicate email (409)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Again\",\n  \"email\": \"alice@example.com\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 409', () => {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test('error mentions already registered', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.detail).to.include('already registered');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User — invalid email (422)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bad Email\",\n  \"email\": \"not-an-email\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 422', () => {",
+                  "  pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is an array', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('array contains at least one user', () => {",
+                  "  pm.expect(pm.response.json().length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/users/{{user_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('returned user matches created user', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.id).to.eql(pm.collectionVariables.get('user_id'));",
+                  "  pm.expect(json.email).to.eql('alice@example.com');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User — not found (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/users/999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 404', () => {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('error says user not found', () => {",
+                  "  pm.expect(pm.response.json().detail).to.include('not found');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/users/{{user_id}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Updated\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('name was updated', () => {",
+                  "  pm.expect(pm.response.json().name).to.eql('Alice Updated');",
+                  "});",
+                  "",
+                  "pm.test('email was not changed', () => {",
+                  "  pm.expect(pm.response.json().email).to.eql('alice@example.com');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/users/{{user_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 204', () => {",
+                  "  pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('response body is empty', () => {",
+                  "  pm.expect(pm.response.text()).to.eql('');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Deleted User — not found (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/users/{{user_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 404 after deletion', () => {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Summarize — happy path",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/summarize",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"FastAPI is a modern web framework for building APIs with Python. It is fast, easy to use, and automatically generates OpenAPI documentation.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response has summary, word_count, model', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.all.keys('summary', 'word_count', 'model');",
+                  "});",
+                  "",
+                  "pm.test('summary is a non-empty string', () => {",
+                  "  pm.expect(pm.response.json().summary).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('word_count is a number', () => {",
+                  "  pm.expect(pm.response.json().word_count).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Summarize — empty text (422)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/summarize",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 422 for empty text', () => {",
+                  "  pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Summarize — missing text field (422)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/summarize",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 422 for missing field', () => {",
+                  "  pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
