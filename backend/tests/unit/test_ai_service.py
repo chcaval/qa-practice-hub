@@ -71,3 +71,9 @@ def test_summarize_raises_on_text_too_long(ai_service):
 def test_word_count_parametrized(ai_service, text, expected_words):
     result = ai_service.summarize(text)
     assert result["word_count"] == expected_words
+
+
+def test_summarize_raises_runtime_error_on_client_failure(ai_service, mock_client):
+    mock_client.complete.side_effect = Exception("network error")
+    with pytest.raises(RuntimeError, match="unavailable"):
+        ai_service.summarize("some text")
