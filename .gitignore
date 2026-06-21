@@ -20,3 +20,7 @@ node_modules/
 # Misc
 .DS_Store
 .env
+frontend/dist/
+frontend/node_modules/
+test-results/
+playwright-report/

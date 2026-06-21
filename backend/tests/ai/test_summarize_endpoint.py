@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 
 from app.main import app, get_ai_service
-from app.ai_service import AIService
+from backend.app.services.ai_service import AIService
 
 
 def make_mock_ai(summary="Mocked summary.", model="mock-v1"):

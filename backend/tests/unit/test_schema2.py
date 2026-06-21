@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from app.schemas import UserUpdate, UserCreate
+from backend.app.schemas.schemas import UserUpdate, UserCreate
 
 def test_create_user_valid():
     user = UserCreate(name="Alice", email="alice@exemplo.com");

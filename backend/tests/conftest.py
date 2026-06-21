@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.main import app
-from app.database import Base, get_db
+from backend.app.core.database import Base, get_db
 
 # Use an in-memory SQLite DB for tests — fast and isolated per session
 TEST_DATABASE_URL = "sqlite:///./test_run.db"

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from app.ai_service import AIService
+from backend.app.services.ai_service import AIService
 
 
 @pytest.fixture

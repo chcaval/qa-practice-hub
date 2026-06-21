@@ -1,0 +1,88 @@
+def shout(func):
+    def wrapper():
+        print("Starting...")
+        func()
+        print("Finished!")
+    return wrapper
+
+@shout
+def hello():
+    print("Hello")
+    
+# hello()
+
+# Exercício 1 — Função dentro de variável
+
+def greeting():
+    print("Hello!")
+    
+    
+x = greeting
+
+# x()
+
+def say_hi():
+    print('Hi!')
+
+def execute_function(a):
+    a()
+
+# execute_function(say_hi)
+
+
+def my_decorator(func):
+
+    def wrapper():
+        print("Antes")
+        func()
+        print("Depois")
+
+    return wrapper
+
+
+@my_decorator
+def hello():
+    print("Hello")
+
+
+# hello()
+
+import time
+
+def my_decorator(func):
+    
+    def wrapper():
+        print('Start')
+        time.sleep(2)
+        func()
+        time.sleep(2)
+        print('End')
+        
+    return wrapper
+    
+@my_decorator
+def hello():
+    print('Running')
+    
+    
+# hello()
+
+def repeat(times):
+    
+    def decorator(func):
+        
+        def wrapper():
+            for i in range(times):
+                func() 
+                time.sleep(2)
+            
+        return wrapper
+    
+    return decorator
+
+@repeat(3)
+def hello():
+    print("Hi")
+    
+
+hello()
